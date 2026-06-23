@@ -7,7 +7,9 @@ import { ContractForm } from '@/components/contract/ContractForm';
 import { ContractSummary } from '@/components/contract/ContractSummary';
 import { useToast } from '@/components/ui/ToastContext';
 import { todayIST, toIST } from '@/lib/utils';
-import { PlaybookSetup } from '@/lib/types';
+import { DailySession, PlaybookSetup, Profile } from '@/lib/types';
+import { z } from 'zod';
+import { ContractSchema } from '@/lib/validations';
 import { Card } from '@/components/ui/Card';
 
 export default function ContractPage() {
@@ -18,8 +20,8 @@ export default function ContractPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  const [sessionData, setSessionData] = React.useState<any>(null);
-  const [profileData, setProfileData] = React.useState<any>(null);
+  const [sessionData, setSessionData] = React.useState<Partial<DailySession> | null>(null);
+  const [profileData, setProfileData] = React.useState<Partial<Profile> | null>(null);
   const [activeSetups, setActiveSetups] = React.useState<PlaybookSetup[]>([]);
 
   React.useEffect(() => {
@@ -75,10 +77,10 @@ export default function ContractPage() {
     loadData();
   }, [supabase, router, showToast]);
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: z.infer<typeof ContractSchema>) => {
     setIsSubmitting(true);
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session || !sessionData?.id) return;
 
     const now = new Date().toISOString();
 
@@ -103,7 +105,7 @@ export default function ContractPage() {
     }
 
     // 2. INSERT behavioral_events
-    await supabase.from('behavioral_events').insert({
+    const { error: eventError } = await supabase.from('behavioral_events').insert({
       user_id: session.user.id,
       session_id: updatedSession.id,
       event_type: 'contract_signed',
@@ -114,6 +116,10 @@ export default function ContractPage() {
         signed_at_ist: toIST(new Date()).toISOString(),
       },
     });
+
+    if (eventError) {
+      throw new Error(`Failed to log telemetry: ${eventError.message}`);
+    }
 
     setSessionData(updatedSession);
     setIsSubmitting(false);
@@ -129,8 +135,8 @@ export default function ContractPage() {
     return (
       <div className="mx-auto max-w-2xl p-4 sm:p-6 mt-10">
         <ContractSummary
-          maxTrades={sessionData.contract_max_trades}
-          maxLoss={sessionData.contract_max_loss_inr}
+          maxTrades={sessionData.contract_max_trades || 0}
+          maxLoss={sessionData.contract_max_loss_inr || 0}
           allowedSetupIds={sessionData.contract_allowed_setup_ids || []}
           forbiddenConditions={sessionData.contract_forbidden_conditions}
           signedAt={sessionData.contract_signed_at}

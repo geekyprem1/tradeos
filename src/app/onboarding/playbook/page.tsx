@@ -6,6 +6,7 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/ToastContext';
 import { SetupForm } from '@/components/playbook/SetupForm';
+import { PlaybookSetup } from '@/lib/types';
 
 export default function OnboardingPlaybookPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function OnboardingPlaybookPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const supabase = createBrowserClient();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: Partial<PlaybookSetup>) => {
     setIsLoading(true);
     
     const { data: { session } } = await supabase.auth.getSession();

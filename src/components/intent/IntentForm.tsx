@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { PlaybookSetup, IntentResponse } from '@/lib/types';
 import { formatINR, todayIST } from '@/lib/utils';
 import { useToast } from '@/components/ui/ToastContext';
+import { PSYCHOLOGY_TAGS } from '@/lib/constants';
 
 type IntentFormValues = Omit<z.infer<typeof IntentRequestSchema>, 'session_date'>;
 
@@ -32,6 +33,7 @@ export function IntentForm({ contractSetups, budgetRemaining, onResult }: Intent
       setup_id: contractSetups[0]?.id || '',
       risk_amount_inr: 0,
       rr_ratio: 2.0,
+      psychology_tag: 'focus',
     },
   });
 
@@ -54,8 +56,9 @@ export function IntentForm({ contractSetups, budgetRemaining, onResult }: Intent
       }
 
       onResult(resultData as IntentResponse, resultData.intent_id);
-    } catch (err: any) {
-      showToast({ message: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      showToast({ message: errorMsg, variant: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +101,17 @@ export function IntentForm({ contractSetups, budgetRemaining, onResult }: Intent
           error={errors.rr_ratio?.message}
         />
       </div>
+
+      <Select
+        label="Current Psychological State"
+        {...register('psychology_tag')}
+        error={errors.psychology_tag?.message}
+      >
+        <option value="">-- How are you feeling? --</option>
+        {PSYCHOLOGY_TAGS.map(tag => (
+          <option key={tag} value={tag}>{tag.toUpperCase()}</option>
+        ))}
+      </Select>
 
       <Button type="submit" className="w-full h-12 text-lg" isLoading={isLoading}>
         Validate Intent

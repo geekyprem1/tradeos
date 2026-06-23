@@ -21,10 +21,21 @@ export function ValidationResult({ result, intentId, setupId, onOverrideComplete
   const [overrideReason, setOverrideReason] = React.useState('');
   const [isOverriding, setIsOverriding] = React.useState(false);
   const [showOverrideInput, setShowOverrideInput] = React.useState(result.result === 'no_go');
+  const [hasOverridden, setHasOverridden] = React.useState(false);
 
   const isGo = result.result === 'go';
   const isCaution = result.result === 'caution';
   const isNoGo = result.result === 'no_go';
+  const canProceed = isGo || hasOverridden;
+
+  const [brakeCountdown, setBrakeCountdown] = React.useState(result.requires_brake ? 60 : 0);
+
+  React.useEffect(() => {
+    if (brakeCountdown > 0) {
+      const timer = setTimeout(() => setBrakeCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [brakeCountdown]);
 
   const handleOverride = async () => {
     if (overrideReason.length < 10) {
@@ -46,9 +57,11 @@ export function ValidationResult({ result, intentId, setupId, onOverrideComplete
       }
 
       showToast({ message: 'Override applied. Extreme caution advised.', variant: 'error' });
+      setHasOverridden(true);
       onOverrideComplete();
-    } catch (err: any) {
-      showToast({ message: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      showToast({ message: errorMsg, variant: 'error' });
     } finally {
       setIsOverriding(false);
     }
@@ -70,11 +83,12 @@ export function ValidationResult({ result, intentId, setupId, onOverrideComplete
         {isNoGo && <XCircle className="w-16 h-16 text-danger mb-4" />}
         
         <h2 className={`text-2xl font-bold mb-2 ${
-          isGo ? 'text-success' : isCaution ? 'text-warning' : 'text-danger'
+          isGo && !hasOverridden ? 'text-success' : isCaution && !hasOverridden ? 'text-warning' : 'text-danger'
         }`}>
-          {isGo && 'ALL CLEAR. EXECUTE.'}
-          {isCaution && 'CAUTION ADVISED.'}
-          {isNoGo && 'NO-GO. DO NOT TRADE.'}
+          {isGo && !hasOverridden && 'ALL CLEAR. EXECUTE.'}
+          {isCaution && !hasOverridden && 'CAUTION ADVISED.'}
+          {isNoGo && !hasOverridden && 'NO-GO. DO NOT TRADE.'}
+          {hasOverridden && 'OVERRIDE ACTIVE. EXTREME CAUTION.'}
         </h2>
       </div>
 
@@ -99,10 +113,15 @@ export function ValidationResult({ result, intentId, setupId, onOverrideComplete
         </div>
       </div>
 
-      {isGo ? (
+      {canProceed ? (
         <div className="space-y-4">
+          {hasOverridden && (
+             <div className="bg-danger/20 p-3 rounded text-sm text-white border border-danger/50 text-center mb-4">
+               Override recorded. Proceeding to log this trade will negatively impact your Discipline Score.
+             </div>
+          )}
           <Link href={`/journal/new?intent_id=${intentId}&setup_id=${setupId}`}>
-            <Button className="w-full h-12 text-lg">
+            <Button className={`w-full h-12 text-lg ${hasOverridden ? 'bg-danger hover:bg-danger/80 text-white' : ''}`}>
               Proceed & Log Trade <ChevronRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
@@ -144,9 +163,9 @@ export function ValidationResult({ result, intentId, setupId, onOverrideComplete
                   className="flex-1 bg-danger hover:bg-danger/80 text-white" 
                   onClick={handleOverride}
                   isLoading={isOverriding}
-                  disabled={overrideReason.length < 10}
+                  disabled={overrideReason.length < 10 || brakeCountdown > 0}
                 >
-                  Force Override
+                  {brakeCountdown > 0 ? `Wait ${brakeCountdown}s...` : 'Force Override'}
                 </Button>
               </div>
             </div>

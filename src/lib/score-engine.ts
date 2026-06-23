@@ -123,7 +123,7 @@ export async function deriveScore(userId: string, sessionDate: string): Promise<
     });
 
   if (logError) {
-    console.error(`Failed to log score_derived event: ${logError.message}`);
+    throw new Error(`Failed to log score_derived event: ${logError.message}`);
   }
 
   return result;

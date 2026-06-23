@@ -81,6 +81,7 @@ export default function IntentPage() {
   }, [supabase]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -151,7 +152,7 @@ export default function IntentPage() {
         </div>
 
         <div>
-          <h2 className="text-lg font-bold text-white mb-4">Today's Validation History</h2>
+          <h2 className="text-lg font-bold text-white mb-4">Today&apos;s Validation History</h2>
           <IntentHistory intents={intents} setups={allSetups} />
         </div>
       </div>

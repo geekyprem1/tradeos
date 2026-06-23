@@ -6,14 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PlaybookSetupSchema } from '@/lib/validations';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { TIMEFRAMES } from '@/lib/constants';
 
 type SetupFormValues = z.infer<typeof PlaybookSetupSchema>;
 
 interface SetupFormProps {
-  defaultValues?: Partial<SetupFormValues> | any;
+  defaultValues?: Partial<SetupFormValues>;
   onSubmit: (data: SetupFormValues) => Promise<void>;
   isLoading?: boolean;
   submitLabel?: string;
@@ -30,14 +29,14 @@ export function SetupForm({ defaultValues, onSubmit, isLoading, submitLabel = 'S
     defaultValues: {
       name: defaultValues?.name || '',
       entry_conditions: defaultValues?.entry_conditions || '',
-      timeframe: (defaultValues?.timeframe as any) || '15min',
+      timeframe: (defaultValues?.timeframe as SetupFormValues['timeframe']) || '15min',
       min_rr_ratio: defaultValues?.min_rr_ratio || 2.0,
       notes: defaultValues?.notes || '',
     },
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input
         label="Setup Name"
         placeholder="e.g. Bull Flag Breakout"
@@ -58,17 +57,29 @@ export function SetupForm({ defaultValues, onSubmit, isLoading, submitLabel = 'S
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Select
-          label="Timeframe"
-          {...register('timeframe')}
-          error={errors.timeframe?.message}
-        >
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-white">Timeframe</label>
+        <div className="flex flex-wrap gap-2">
           {TIMEFRAMES.map((tf) => (
-            <option key={tf} value={tf}>{tf}</option>
+            <label key={tf} className="cursor-pointer">
+              <input 
+                type="radio" 
+                value={tf} 
+                className="peer sr-only" 
+                {...register('timeframe')} 
+              />
+              <span className="block rounded-full border border-muted bg-surface px-3 py-1.5 text-sm text-muted transition-colors peer-checked:border-brand-primary peer-checked:bg-brand-primary/20 peer-checked:text-brand-accent peer-focus-visible:ring-2 peer-focus-visible:ring-brand-accent">
+                {tf}
+              </span>
+            </label>
           ))}
-        </Select>
+        </div>
+        {errors.timeframe && (
+          <p className="text-sm text-danger">{errors.timeframe.message}</p>
+        )}
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="Min Risk:Reward"
           type="number"

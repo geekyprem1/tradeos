@@ -20,7 +20,13 @@ export const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
             <span>{Math.round(percentage)}%</span>
           </div>
         )}
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-raised">
+        <div 
+          className="h-2 w-full overflow-hidden rounded-full bg-surface-raised"
+          role="progressbar"
+          aria-valuenow={value}
+          aria-valuemin={0}
+          aria-valuemax={max}
+        >
           <div
             className={cn('h-full transition-all duration-300 ease-in-out', colorClass)}
             style={{ width: `${percentage}%` }}

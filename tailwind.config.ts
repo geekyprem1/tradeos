@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'brand-primary': '#2563eb',
-        'brand-accent': '#3b82f6',
+        'brand-primary': '#6366f1',
+        'brand-accent': '#f59e0b',
         success: '#22c55e',
         danger: '#ef4444',
         surface: '#0f172a',

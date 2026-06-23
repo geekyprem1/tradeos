@@ -8,7 +8,7 @@ import { TradeJournalSchema } from '@/lib/validations';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { PlaybookSetup } from '@/lib/types';
+import { PlaybookSetup, TradeIntent } from '@/lib/types';
 import { PSYCHOLOGY_TAGS } from '@/lib/constants';
 import { formatINR } from '@/lib/utils';
 import { Toggle } from '@/components/ui/Toggle';
@@ -19,11 +19,12 @@ interface TradeFormProps {
   setups: PlaybookSetup[];
   defaultIntentId?: string;
   defaultSetupId?: string;
+  intentData?: TradeIntent | null; // using proper type
   onSubmit: (data: TradeFormValues) => Promise<void>;
   isLoading?: boolean;
 }
 
-export function TradeForm({ setups, defaultIntentId, defaultSetupId, onSubmit, isLoading }: TradeFormProps) {
+export function TradeForm({ setups, defaultIntentId, defaultSetupId, intentData, onSubmit, isLoading }: TradeFormProps) {
   const {
     register,
     handleSubmit,
@@ -63,6 +64,18 @@ export function TradeForm({ setups, defaultIntentId, defaultSetupId, onSubmit, i
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Hidden intent ID if passed from intent engine */}
       {defaultIntentId && <input type="hidden" {...register('intent_id')} />}
+
+      {intentData && intentData.validation_result === 'no_go' && intentData.user_proceeded && (
+        <div className="bg-danger/10 p-4 rounded-lg border border-danger/30 mb-6">
+          <p className="text-sm font-semibold text-danger uppercase tracking-wider mb-2">
+            ⚠️ Reflect on your Override
+          </p>
+          <p className="text-sm text-white mb-2">
+            This trade came from a NO-GO override. You justified it with:
+          </p>
+          <p className="text-sm text-muted italic">&quot;{intentData.override_reason}&quot;</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
@@ -128,7 +141,7 @@ export function TradeForm({ setups, defaultIntentId, defaultSetupId, onSubmit, i
           <label className="block text-sm font-medium text-white">Did you follow your rules?</label>
           <Toggle
             checked={ruleFollowed}
-            onChange={(e: any) => setValue('rule_followed', typeof e === 'boolean' ? e : e.target.checked)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement> | boolean) => setValue('rule_followed', typeof e === 'boolean' ? e : e.target.checked)}
             label={ruleFollowed ? 'Yes, strictly' : 'No, I deviated'}
           />
         </div>

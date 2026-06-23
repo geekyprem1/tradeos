@@ -23,6 +23,7 @@ export const IntentRequestSchema = z.object({
   risk_amount_inr: z.number().min(0),
   rr_ratio: z.number().min(0.1),
   session_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  psychology_tag: z.enum(PSYCHOLOGY_TAGS),
 });
 
 export const TradeJournalSchema = z.object({

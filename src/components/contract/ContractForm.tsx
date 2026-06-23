@@ -78,7 +78,7 @@ export function ContractForm({ defaultValues, setups, onSubmit, isLoading }: Con
         
         {setups.length === 0 ? (
           <div className="p-4 rounded-md border border-dashed border-muted text-center text-sm text-muted">
-            You don't have any active setups. Please create one in the Playbook.
+            You don&apos;t have any active setups. Please create one in the Playbook.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -8,17 +8,21 @@ export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 
 export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
   ({ className, label, value, min = 1, max = 10, ...props }, ref) => {
+    const uniqueId = React.useId();
+    const sliderId = props.id || uniqueId;
+
     return (
       <div className={cn('w-full', className)}>
         {label && (
           <div className="mb-2 flex justify-between">
-            <label className="text-sm font-medium text-white">{label}</label>
+            <label htmlFor={sliderId} className="text-sm font-medium text-white">{label}</label>
             <span className="text-sm font-bold text-white">{value}</span>
           </div>
         )}
         <input
           type="range"
           ref={ref}
+          id={sliderId}
           value={value}
           min={min}
           max={max}

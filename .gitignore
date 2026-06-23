@@ -40,3 +40,6 @@ next-env.d.ts
 
 # supabase
 .supabase/
+
+# quarantine
+_future_phases_backup/

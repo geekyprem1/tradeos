@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { SignupSchema } from '@/lib/validations';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -12,9 +11,13 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/ToastContext';
 
-type SignupFormValues = z.infer<typeof SignupSchema>;
+const ResetPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
 
-export default function SignupPage() {
+type ResetPasswordFormValues = z.infer<typeof ResetPasswordSchema>;
+
+export default function ResetPasswordPage() {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
@@ -25,21 +28,14 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupFormValues>({
-    resolver: zodResolver(SignupSchema),
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(ResetPasswordSchema),
   });
 
-  const onSubmit = async (data: SignupFormValues) => {
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
     });
 
     setIsLoading(false);
@@ -57,7 +53,7 @@ export default function SignupPage() {
         <Card variant="raised" padding="lg" className="w-full max-w-md text-center">
           <h1 className="mb-4 text-2xl font-bold text-success">Check your email</h1>
           <p className="mb-6 text-muted">
-            We&apos;ve sent a confirmation link to your email address. Please click the link to confirm your account and log in.
+            We&apos;ve sent a password reset link to your email address. Please check your inbox.
           </p>
           <Link href="/auth/login">
             <Button className="w-full">Back to Login</Button>
@@ -70,15 +66,13 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card variant="raised" padding="lg" className="w-full max-w-md">
-        <h1 className="mb-6 text-2xl font-bold text-white text-center">Sign up for TradingOS</h1>
+        <h1 className="mb-6 text-2xl font-bold text-white text-center">Reset Password</h1>
         
+        <p className="mb-6 text-sm text-muted text-center">
+          Enter your email address and we&apos;ll send you a link to reset your password.
+        </p>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Full Name"
-            placeholder="John Doe"
-            error={errors.fullName?.message}
-            {...register('fullName')}
-          />
           <Input
             label="Email"
             type="email"
@@ -86,28 +80,14 @@ export default function SignupPage() {
             error={errors.email?.message}
             {...register('email')}
           />
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-          <Input
-            label="Confirm Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.confirmPassword?.message}
-            {...register('confirmPassword')}
-          />
           
           <Button type="submit" className="w-full" isLoading={isLoading}>
-            Sign Up
+            Send Reset Link
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted">
-          Already have an account?{' '}
+          Remember your password?{' '}
           <Link href="/auth/login" className="text-brand-accent hover:underline">
             Log in
           </Link>

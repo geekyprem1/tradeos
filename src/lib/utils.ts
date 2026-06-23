@@ -32,10 +32,12 @@ export function computeReadinessScore(
   focus: number,
   motivation: number
 ): number {
-  // Stress is inverted: 10 means high stress (bad), 1 means low stress (good).
-  // So we convert stress to a positive contribution: 11 - stress.
   const invertedStress = 11 - stress;
-  const total = sleep + invertedStress + energy + focus + motivation;
-  // Max possible total = 50. Convert to a score out of 100.
-  return Math.round((total / 50) * 100);
+  const weightedSum =
+    sleep * 0.25 +
+    energy * 0.25 +
+    focus * 0.20 +
+    motivation * 0.20 +
+    invertedStress * 0.10;
+  return Math.round(weightedSum * 10);
 }

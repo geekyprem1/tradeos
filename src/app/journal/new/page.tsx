@@ -3,7 +3,9 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
-import { PlaybookSetup } from '@/lib/types';
+import { PlaybookSetup, TradeIntent } from '@/lib/types';
+import { z } from 'zod';
+import { TradeJournalSchema } from '@/lib/validations';
 import { todayIST } from '@/lib/utils';
 import { TradeForm } from '@/components/journal/TradeForm';
 import { Card } from '@/components/ui/Card';
@@ -19,30 +21,41 @@ function NewJournalEntryContent() {
   const setupId = searchParams.get('setup_id') || undefined;
 
   const [setups, setSetups] = React.useState<PlaybookSetup[]>([]);
+  const [intentData, setIntentData] = React.useState<TradeIntent | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
-    async function fetchSetups() {
+    async function fetchData() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data } = await supabase
+      const { data: setupsData } = await supabase
         .from('playbook_setups')
         .select('*')
         .eq('user_id', session.user.id)
         .is('archived_at', null)
         .order('name', { ascending: true });
 
-      if (data) {
-        setSetups(data);
+      if (setupsData) {
+        setSetups(setupsData);
       }
+
+      if (intentId) {
+        const { data: intent } = await supabase
+          .from('trade_intents')
+          .select('*')
+          .eq('id', intentId)
+          .single();
+        if (intent) setIntentData(intent);
+      }
+
       setIsLoading(false);
     }
-    fetchSetups();
-  }, [supabase]);
+    fetchData();
+  }, [supabase, intentId]);
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: z.infer<typeof TradeJournalSchema>) => {
     setIsSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -114,7 +127,7 @@ function NewJournalEntryContent() {
       }
 
       // 5. INSERT behavioral_events 'trade_logged'
-      await supabase.from('behavioral_events').insert({
+      const { error: eventError1 } = await supabase.from('behavioral_events').insert({
         user_id: session.user.id,
         session_id: dailySession.id,
         event_type: 'trade_logged',
@@ -126,6 +139,8 @@ function NewJournalEntryContent() {
         },
       });
 
+      if (eventError1) throw new Error(`Failed to log telemetry: ${eventError1.message}`);
+
       // 6. Check Evening Activity (After 4 PM IST)
       const now = new Date();
       const currentHourUTC = now.getUTCHours();
@@ -136,19 +151,22 @@ function NewJournalEntryContent() {
       const thresholdMinutes = 10 * 60 + 30; // 10:30 AM UTC
       
       if (currentMinutesSinceMidnightUTC >= thresholdMinutes) {
-        await supabase.from('behavioral_events').insert({
+        const { error: eventError2 } = await supabase.from('behavioral_events').insert({
           user_id: session.user.id,
           session_id: dailySession.id,
           event_type: 'evening_activity',
           metadata: { activity_type: 'trade_logged' },
         });
+
+        if (eventError2) throw new Error(`Failed to log evening telemetry: ${eventError2.message}`);
       }
 
       showToast({ message: 'Trade logged successfully.', variant: 'success' });
       router.push(`/journal/${today}`);
 
-    } catch (err: any) {
-      showToast({ message: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      showToast({ message: errorMsg, variant: 'error' });
       setIsSubmitting(false);
     }
   };
@@ -171,6 +189,7 @@ function NewJournalEntryContent() {
           setups={setups}
           defaultIntentId={intentId}
           defaultSetupId={setupId}
+          intentData={intentData}
           onSubmit={handleSubmit}
           isLoading={isSubmitting}
         />

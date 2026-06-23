@@ -98,7 +98,7 @@ Dark mode: class strategy
     ├── todayIST(): string              ← returns YYYY-MM-DD in IST
     ├── formatINR(amount: number): string
     ├── formatPercent(value: number): string
-    └── computeReadinessScore(sleep, stress, energy, focus, motivation): number
+    ├── computeReadinessScore(sleep, stress, energy, focus, motivation): number // Sleep 25%, Energy 25%, Focus 20%, Motivation 20%, Stress 10% (inverse)
 
 3.  lib/types.ts                        ← TypeScript interfaces mirroring DB schema
     ├── Profile
@@ -732,7 +732,7 @@ scratch/test-score-engine.ts
 
 ```
 1.  components/intent/IntentForm.tsx
-    ├── Setup dropdown (only setups from today's contract — fetch contract on load)
+    ├── Setup selection (tactile cards only from today's contract — fetch contract on load)
     ├── Risk Amount (₹) input with remaining budget hint
     ├── R:R Ratio input
     ├── Uses: Select, Input, Button from Phase 06
@@ -792,8 +792,8 @@ scratch/test-score-engine.ts
 2.  components/journal/TradeForm.tsx
     ├── Fields: instrument (text), entry_price, exit_price, quantity (numbers)
     ├── Auto-computed P&L display: (exit - entry) × qty — live as user types
-    ├── Setup dropdown (from all active setups — not just today's contract)
-    ├── Psychology tag select (all 7 values from constants.ts)
+    ├── Setup selection (tactile card from all active setups — not just today's contract)
+    ├── Psychology tag select (tactile cards: all 7 values from constants.ts)
     ├── Rule Followed toggle
     ├── Deviation Note (textarea — required if rule_followed=false, hidden otherwise)
     ├── Notes (optional textarea)

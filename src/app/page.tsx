@@ -8,6 +8,8 @@ import { ScoreChart } from '@/components/score/ScoreChart';
 import { Activity, Target, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { BehavioralEvent } from '@/lib/types';
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
@@ -45,6 +47,20 @@ export default async function DashboardPage() {
     date: h.session_date,
     score: h.score_total || 0,
   })) : [];
+
+  // Fetch setups for allowed setups display
+  const { data: allSetups } = await supabase
+    .from('playbook_setups')
+    .select('id, name')
+    .eq('user_id', session.user.id);
+
+  // Fetch today's behavioral events
+  const { data: todayEvents } = await supabase
+    .from('behavioral_events')
+    .select('*')
+    .eq('session_id', sessionData?.id)
+    .order('occurred_at', { ascending: false })
+    .limit(5);
 
   // Computed Values
   const checkinDone = !!sessionData?.checkin_completed_at;
@@ -106,12 +122,27 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
           {contractDone ? (
-            <BudgetBar maxLoss={maxLoss} realizedPnL={realizedPnL} />
+            <>
+              <BudgetBar maxLoss={maxLoss} realizedPnL={realizedPnL} />
+              <Card padding="md">
+                <h3 className="text-sm font-bold text-white mb-3">Allowed Setups</h3>
+                <div className="flex flex-wrap gap-2">
+                  {sessionData?.contract_allowed_setup_ids?.map((id: string) => {
+                    const setup = allSetups?.find(s => s.id === id);
+                    return (
+                      <span key={id} className="px-2 py-1 bg-surface-raised text-xs rounded text-white border border-muted/30">
+                        {setup?.name || 'Unknown'}
+                      </span>
+                    );
+                  }) || <span className="text-xs text-muted">None allowed</span>}
+                </div>
+              </Card>
+            </>
           ) : (
             <MetricCard 
-              label="Daily Budget" 
+              label="Daily Budget & Setups" 
               value="Locked" 
               sublabel="Sign your daily contract to unlock."
               linkTo="/contract"
@@ -120,9 +151,29 @@ export default async function DashboardPage() {
           )}
         </div>
         
-        <div className="lg:col-span-2">
-          {/* We reuse the ScoreChart built in Phase 17 */}
+        <div className="lg:col-span-2 space-y-6">
           <ScoreChart data={chartData} />
+          
+          <Card padding="md">
+            <h3 className="text-sm font-bold text-white mb-4">Behavioral Events</h3>
+            {todayEvents && todayEvents.length > 0 ? (
+              <div className="space-y-3">
+                {todayEvents.map((event: BehavioralEvent) => (
+                  <div key={event.id} className="flex justify-between items-start border-b border-muted/20 pb-2 last:border-0 last:pb-0">
+                    <div>
+                      <p className="text-sm font-medium text-white">{event.event_type}</p>
+                      <p className="text-xs text-muted mt-1">{JSON.stringify(event.metadata)}</p>
+                    </div>
+                    <span className="text-xs text-muted whitespace-nowrap ml-4">
+                      {new Date(event.occurred_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted">No events recorded today.</p>
+            )}
+          </Card>
         </div>
       </div>
       

@@ -16,6 +16,7 @@ export const PSYCHOLOGY_TAGS = [
   'fear',
   'greed',
   'revenge',
+  'random',
   'restlessness',
 ] as const;
 

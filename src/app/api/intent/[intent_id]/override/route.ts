@@ -49,7 +49,7 @@ export async function PATCH(
     }
 
     // Insert behavioral event
-    await supabase.from('behavioral_events').insert({
+    const { error: eventError } = await supabase.from('behavioral_events').insert({
       user_id: session.user.id,
       session_id: intent.session_id,
       event_type: 'intent_override',
@@ -59,6 +59,10 @@ export async function PATCH(
         reason: parsed.reason,
       },
     });
+
+    if (eventError) {
+      return NextResponse.json({ error: `Telemetry Error: ${eventError.message}` }, { status: 500 });
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

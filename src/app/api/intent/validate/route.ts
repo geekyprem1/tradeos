@@ -92,6 +92,16 @@ export async function POST(request: Request) {
       reasons.push('Low data warning: This setup has fewer than 10 logged trades.');
     }
 
+    // Psychology Check
+    const badTags = ['fomo', 'revenge', 'random'];
+    const isBadPsychology = badTags.includes(parsed.psychology_tag);
+    let requires_brake = false;
+    if (isBadPsychology) {
+      result = 'no_go';
+      requires_brake = true;
+      reasons.push(`Psychological State Warning: You indicated ${parsed.psychology_tag.toUpperCase()}. Trading from this state usually leads to losses.`);
+    }
+
     // 4. Insert trade_intents
     const { data: intentRow, error: intentError } = await supabase
       .from('trade_intents')
@@ -115,7 +125,7 @@ export async function POST(request: Request) {
     }
 
     // 5. Insert behavioral_events
-    await supabase.from('behavioral_events').insert({
+    const { error: eventError } = await supabase.from('behavioral_events').insert({
       user_id: session.user.id,
       session_id: dailySession.id,
       event_type: 'intent_submitted',
@@ -124,8 +134,13 @@ export async function POST(request: Request) {
         result,
         reasons,
         risk_amount: parsed.risk_amount_inr,
+        psychology_tag: parsed.psychology_tag,
       },
     });
+
+    if (eventError) {
+      return NextResponse.json({ error: `Telemetry Error: ${eventError.message}` }, { status: 500 });
+    }
 
     const response: IntentResponse = {
       intent_id: intentRow.id,
@@ -135,6 +150,7 @@ export async function POST(request: Request) {
       trades_remaining: remaining_trades,
       budget_remaining_inr: budget_remaining,
       low_data_warning: isLowData,
+      requires_brake,
     };
 
     return NextResponse.json(response);

@@ -67,6 +67,7 @@ export default function ScorePage() {
   }, [supabase]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -87,8 +88,9 @@ export default function ScorePage() {
       
       // Optionally reload history to add today's point to the chart
       loadData();
-    } catch (err: any) {
-      showToast({ message: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      showToast({ message: errorMsg, variant: 'error' });
     } finally {
       setIsCalculating(false);
     }
@@ -112,7 +114,7 @@ export default function ScorePage() {
         <div className="lg:col-span-1">
           {todayScore ? (
             <Card padding="lg" className="flex flex-col items-center justify-center text-center h-full">
-              <h2 className="text-lg font-bold text-white mb-6">Today's Score</h2>
+              <h2 className="text-lg font-bold text-white mb-6">Today&apos;s Score</h2>
               <div className="mb-6 transform scale-110">
                 <ScoreGauge score={todayScore.total} />
               </div>

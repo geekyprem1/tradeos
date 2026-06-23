@@ -476,7 +476,7 @@ Write a database function + trigger OR application-layer logic: after INSERT on 
 **Estimate:** 3h
 
 **Description:**  
-Build the 5-slider check-in form (Sleep Quality, Stress Level, Energy, Focus, Motivation). Each slider: 1–10 scale with visual label. Compute Readiness Score on submit: `((sleep + (10-stress) + energy + focus + motivation) / 50) * 100`. INSERT to `daily_sessions` (create or update checkin fields). Log `behavioral_events` event `checkin_completed`.
+Build the 5-slider check-in form (Sleep Quality, Stress Level, Energy, Focus, Motivation). Each slider: 1–10 scale with visual label. Compute Readiness Score on submit: `(sleep*0.25 + (10-stress)*0.10 + energy*0.25 + focus*0.20 + motivation*0.20) * 10`. INSERT to `daily_sessions` (create or update checkin fields). Log `behavioral_events` event `checkin_completed`.
 
 **Note:** Stress is inverted in score calculation — high stress = low readiness.
 
@@ -702,10 +702,10 @@ Core server-side validation endpoint. Implements the full algorithm from TAD: lo
 **Estimate:** 3h
 
 **Description:**  
-Build the Trade Intent Engine page. Form: Setup dropdown (only today's allowed setups from contract), Risk Amount (₹), R:R Ratio. On submit → POST to `/api/intent/validate` → display result card.
+Build the Trade Intent Engine page. Form: Setup selection (tactile cards showing only today's allowed setups from contract), Risk Amount (₹), R:R Ratio. On submit → POST to `/api/intent/validate` → display result card.
 
 **Acceptance Criteria:**
-- [ ] Setup dropdown shows ONLY setups in today's signed contract (not all setups)
+- [ ] Setup selection uses tactile cards showing ONLY setups in today's signed contract (not all setups)
 - [ ] If no contract signed: full-page banner "Sign your Contract first" with link
 - [ ] Risk amount: positive number, max = remaining daily loss budget (hint shown)
 - [ ] R:R ratio: positive number, min 1.0
@@ -713,7 +713,7 @@ Build the Trade Intent Engine page. Form: Setup dropdown (only today's allowed s
 - [ ] `intent_id` stored in component state for override tracking
 
 **Testing Checklist:**
-- [ ] Contract with 2 of 3 setups allowed → dropdown shows 2 only
+- [ ] Contract with 2 of 3 setups allowed → tactile cards show 2 only
 - [ ] Submit valid intent → API called → result shown
 - [ ] Submit while daily limit reached → NO_GO shown without API call being needed (API validates anyway)
 
@@ -730,6 +730,7 @@ Build `ValidationResult` component showing GO/CAUTION/NO_GO card. Design: GO = g
 - [ ] GO card: green background, "GO ✓", setup win rate displayed, "Low data warning" if applicable, trades remaining, budget remaining
 - [ ] CAUTION card: amber, warning icon, reason listed, "Proceed Anyway" secondary button
 - [ ] NO_GO card: red, X icon, reason listed, "Proceed Anyway" button (secondary, small)
+- [ ] HYBRID MODEL: If FOMO, Revenge, or Random selected -> trigger 60-second psychological braking screen -> require acknowledgement -> then allow "Proceed Anyway".
 - [ ] "Proceed Anyway" requires user to type a reason in text input (min 10 chars)
 - [ ] Submit "Proceed Anyway" → PATCH to `/api/intent/[intent_id]/override`
 - [ ] After any result: "Log This Trade →" CTA pre-fills the Journal with `intent_id` and setup
@@ -794,7 +795,7 @@ Below the Intent Engine form, display a table of today's submitted intents (from
 **Estimate:** 3h
 
 **Description:**  
-Build trade logging form. Fields: Instrument (text), Entry Price, Exit Price, Quantity (all numeric), Setup Used (dropdown from active setups), Psychology Tag (dropdown: Focus/Confident/FOMO/Fear/Greed/Revenge/Restlessness), Rule Followed (toggle), Deviation Note (text, shown if Rule Followed = false), Notes (optional). Auto-calculates P&L. If navigated from Intent Engine, pre-fills `setup_id` and `intent_id`.
+Build trade logging form. Fields: Instrument (text), Entry Price, Exit Price, Quantity (all numeric), Setup Used (tactile card from active setups), Psychology Tag (tactile cards: Focus/Confident/FOMO/Fear/Greed/Revenge/Restlessness), Rule Followed (toggle), Deviation Note (text, shown if Rule Followed = false), Notes (optional). Auto-calculates P&L. If navigated from Intent Engine, pre-fills `setup_id` and `intent_id`.
 
 **Acceptance Criteria:**
 - [ ] P&L auto-calculated: `(exit_price - entry_price) * quantity` shown live as user types

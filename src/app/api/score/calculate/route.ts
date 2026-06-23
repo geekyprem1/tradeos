@@ -32,8 +32,9 @@ export async function POST(request: Request) {
     const scoreResult = await deriveScore(session.user.id, today);
 
     return NextResponse.json(scoreResult);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Calculate score error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    const errorMsg = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

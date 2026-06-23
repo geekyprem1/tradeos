@@ -26,7 +26,7 @@ export function ReadinessResult({ score, contractSigned }: ReadinessResultProps)
 
   return (
     <Card variant="raised" padding="lg" className="flex flex-col items-center text-center">
-      <h2 className="mb-6 text-xl font-bold text-white">Today's Readiness</h2>
+      <h2 className="mb-6 text-xl font-bold text-white">Today&apos;s Readiness</h2>
       
       <div className="mb-6">
         <ScoreGauge score={score} />
@@ -44,7 +44,7 @@ export function ReadinessResult({ score, contractSigned }: ReadinessResultProps)
           </Link>
         ) : (
           <Link href="/contract">
-            <Button className="w-full">Sign Today's Contract &rarr;</Button>
+            <Button className="w-full">Sign Today&apos;s Contract &rarr;</Button>
           </Link>
         )}
       </div>

@@ -44,6 +44,7 @@ export default function PlaybookPage() {
   }, [supabase, showToast]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSetups();
   }, [loadSetups]);
 
@@ -62,7 +63,7 @@ export default function PlaybookPage() {
     setEditingSetup(null);
   };
 
-  const handleSaveSetup = async (formData: any) => {
+  const handleSaveSetup = async (formData: Partial<PlaybookSetup>) => {
     setIsSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;

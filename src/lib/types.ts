@@ -11,7 +11,7 @@ export interface Profile {
   tier: 'free' | 'pro' | 'teams';
   tier_expires_at?: string;
   notification_prefs: NotificationPrefs;
-  push_subscription?: any;
+  push_subscription?: Record<string, unknown>;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
@@ -22,9 +22,9 @@ export interface PlaybookSetup {
   user_id: string;
   name: string;
   entry_conditions: string;
-  timeframe: string;
+  timeframe: '1min' | '5min' | '15min' | '1hr' | 'daily';
   min_rr_ratio: number;
-  filters?: any;
+  filters?: Record<string, unknown>;
   notes?: string;
   total_trades: number;
   winning_trades: number;
@@ -86,6 +86,7 @@ export interface IntentRequest {
   risk_amount_inr: number;
   rr_ratio: number;
   session_date: string;
+  psychology_tag: 'focus'|'confident'|'fomo'|'fear'|'greed'|'revenge'|'random'|'restlessness';
 }
 
 export interface IntentResponse {
@@ -96,6 +97,7 @@ export interface IntentResponse {
   trades_remaining: number;
   budget_remaining_inr: number;
   low_data_warning: boolean;
+  requires_brake?: boolean;
 }
 
 export interface TradeJournal {
@@ -109,7 +111,7 @@ export interface TradeJournal {
   exit_price: number;
   quantity: number;
   pnl_inr: number;
-  psychology_tag: 'focus'|'confident'|'fomo'|'fear'|'greed'|'revenge'|'restlessness';
+  psychology_tag: 'focus'|'confident'|'fomo'|'fear'|'greed'|'revenge'|'random'|'restlessness';
   rule_followed: boolean;
   deviation_note?: string;
   notes?: string;
@@ -122,7 +124,7 @@ export interface BehavioralEvent {
   user_id: string;
   session_id?: string;
   event_type: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   occurred_at: string;
 }
 

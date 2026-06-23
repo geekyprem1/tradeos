@@ -267,7 +267,7 @@ The system is designed so the trader **feels the friction** before a bad trade a
 | **Morning Check-in** | 5-question emotional readiness form → Readiness Score (0–100%) → color-coded status | MUST |
 | **Commitment Contract** | Daily digital contract: Max trades, Max loss, Allowed setups, Forbidden conditions | MUST |
 | **Trade Intent Engine** | Pre-trade form: Setup selected, Risk amount, R:R → Validates against playbook + daily limits → Go/No-Go signal | MUST |
-| **Trade Journal** | Post-trade log: Entry, Exit, P&L, Setup used, Psychology tag (dropdown: Focus/FOMO/Revenge/Fear/Greed) | MUST |
+| **Trade Journal** | Post-trade log: Entry, Exit, P&L, Setup used, Psychology tag (tactile cards: Focus/FOMO/Revenge/Fear/Greed) | MUST |
 | **Discipline Score** | Daily score (0–100) with 5 weighted pillars; visible dashboard card; 7-day trend chart | MUST |
 | **Notification Engine** | 5 scheduled push/email reminders per the chronological framework (8:30, 9:00, 4:00, 5:00, 8:00 PM) | MUST |
 | **User Auth** | Email/password signup + Google OAuth | MUST |
@@ -391,7 +391,7 @@ Based on a trader's historical win rate by setup type, time of day, and market c
 
 ### FR-04: Morning Psychological Check-in
 - System shall present 5 readiness questions (Sleep Quality, Stress Level, Energy, Focus, Motivation) on a 1–10 scale.
-- System shall compute a Readiness Score (weighted average, normalized to 0–100%).
+- System shall compute a Readiness Score (weighted average: Sleep 25%, Energy 25%, Focus 20%, Motivation 20%, Stress 10% (inverse)).
 - System shall display a color-coded status: Green (70%+), Yellow (40–69%), Red (<40%).
 - System shall display a contextual AI message based on score range.
 - System shall not allow Commitment Contract to be signed until Check-in is complete.
@@ -402,7 +402,7 @@ Based on a trader's historical win rate by setup type, time of day, and market c
 - System shall use the signed contract values in Trade Intent Engine validations throughout the day.
 
 ### FR-06: Trade Intent Engine
-- System shall present a pre-trade form: Setup (dropdown from Playbook), Risk Amount (₹), R:R Ratio.
+- System shall present a pre-trade form: Setup (tactile card selection from Playbook), Risk Amount (₹), R:R Ratio.
 - System shall validate against: (a) Is setup in today's allowed setups from Contract? (b) Will this trade's risk exceed remaining daily loss budget? (c) Will this trade exceed max trade count?
 - System shall display a Go / Caution / No-Go recommendation with rationale.
 - System shall log the intent submission regardless of user's subsequent action.
@@ -544,14 +544,14 @@ Based on a trader's historical win rate by setup type, time of day, and market c
 - [ ] Check-in is locked after 11:00 AM IST (prevents backdating).
 
 ### AC for US-007 & US-008 (Trade Intent Engine)
-- [ ] Pre-trade form presents: Setup dropdown (populated from user's Playbook), Risk Amount input (₹), R:R Ratio input.
+- [ ] Pre-trade form presents: Setup selection (tactile cards populated from user's Playbook), Risk Amount input (₹), R:R Ratio input.
 - [ ] On submission, system validates: Setup is in today's approved list, Trade risk does not exceed remaining daily loss budget, Trade count does not exceed daily maximum.
 - [ ] If all validations pass → display "GO ✓" in green with setup win-rate context.
 - [ ] If risk budget would be exceeded → display "NO-GO ✗ — Daily loss limit would be breached."
 - [ ] If setup not in contract → display "CAUTION ⚠ — This setup is not in today's approved list."
 - [ ] If trade count exceeded → display "NO-GO ✗ — Maximum trades for today reached."
 - [ ] All intent submissions are persisted to database with timestamp and recommendation shown.
-- [ ] System does NOT prevent the user from trading — it shows an advisory. User can proceed by clicking "Proceed Anyway" (which logs the override).
+- [ ] System uses a hybrid model. If FOMO, Revenge, or Random intent is detected, it triggers a 60-second psychological braking screen, requires acknowledgement, and then allows "Proceed Anyway" (which logs the override).
 
 ### AC for US-013 (Discipline Score)
 - [ ] Score is computed daily at 5:00 PM IST (or manually triggerable by user post-session).
@@ -759,11 +759,11 @@ Do not over-engineer the MVP. The behavioral loop does not require microservices
 > [!IMPORTANT]
 > These decisions should be made BEFORE development begins:
 
-1. **Language/Localization:** Will the MVP UI be in English only, or will Hindi/Hinglish toggles be included? The concept document was written in Hinglish — is there a specific vernacular UX hypothesis to test?
+1. **Language/Localization:** RESOLVED: MVP is English-only. Localization deferred to Phase 2.
 
-2. **Readiness Score Weighting:** Which of the 5 check-in factors (Sleep, Stress, Energy, Focus, Motivation) are weighted equally, or is there a custom weighting? Recommend starting with equal weights and adjusting based on data.
+2. **Readiness Score Weighting:** RESOLVED: Sleep 25%, Energy 25%, Focus 20%, Motivation 20%, Stress 10% (inverse).
 
-3. **Hard Block vs. Soft Gate:** The concept proposes the Intent Engine as a gatekeeper. This PRD recommends a **soft gate with friction** (user can override with "Proceed Anyway"). Should the system ever hard-block trading intent? This has significant UX implications.
+3. **Hard Block vs. Soft Gate:** RESOLVED: Hybrid model. If FOMO, Revenge, or Random selected -> trigger 60-second psychological braking screen -> require acknowledgement -> then allow "Proceed Anyway".
 
 4. **Pricing in USD for global expansion:** Is the plan to localize pricing for USD/AED markets in Phase 2, or India-first through Phase 3?
 

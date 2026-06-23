@@ -9,15 +9,14 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/ToastContext';
 import { computeReadinessScore, toIST, todayIST } from '@/lib/utils';
 import { Clock } from 'lucide-react';
+import { DailySession } from '@/lib/types';
 
 export default function CheckinPage() {
   const supabase = createBrowserClient();
   const { showToast } = useToast();
-
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
-  const [sessionData, setSessionData] = React.useState<any>(null);
+  const [sessionData, setSessionData] = React.useState<Partial<DailySession> | null>(null);
   const [isWindowClosed, setIsWindowClosed] = React.useState(false);
 
   // Form states
@@ -95,7 +94,7 @@ export default function CheckinPage() {
     }
 
     // 2. INSERT behavioral_events
-    await supabase.from('behavioral_events').insert({
+    const { error: eventError } = await supabase.from('behavioral_events').insert({
       user_id: session.user.id,
       session_id: updatedSession.id,
       event_type: 'checkin_completed',
@@ -104,6 +103,10 @@ export default function CheckinPage() {
         completed_at_ist: toIST(new Date()).toISOString(),
       },
     });
+
+    if (eventError) {
+      throw new Error(`Failed to log telemetry: ${eventError.message}`);
+    }
 
     setSessionData(updatedSession);
     setIsSubmitting(false);
@@ -119,7 +122,7 @@ export default function CheckinPage() {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center p-4">
         <ReadinessResult 
-          score={sessionData.readiness_score} 
+          score={sessionData.readiness_score || 0} 
           contractSigned={!!sessionData.contract_signed_at} 
         />
       </div>
