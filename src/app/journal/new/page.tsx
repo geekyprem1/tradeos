@@ -97,34 +97,15 @@ function NewJournalEntryContent() {
 
       if (insertError) throw new Error(insertError.message);
 
-      // 3. UPDATE daily_sessions (trades_taken++, realized_pnl_inr += pnl_inr)
-      await supabase
-        .from('daily_sessions')
-        .update({
-          trades_taken: (dailySession.trades_taken || 0) + 1,
-          realized_pnl_inr: (dailySession.realized_pnl_inr || 0) + pnl,
-        })
-        .eq('id', dailySession.id);
-
-      // 4. UPDATE playbook_setups
-      if (formData.setup_id) {
-        const { data: setupData } = await supabase
-          .from('playbook_setups')
-          .select('total_trades, winning_trades')
-          .eq('id', formData.setup_id)
-          .single();
-
-        if (setupData) {
-          const isWin = pnl > 0;
-          await supabase
-            .from('playbook_setups')
-            .update({
-              total_trades: setupData.total_trades + 1,
-              winning_trades: setupData.winning_trades + (isWin ? 1 : 0),
-            })
-            .eq('id', formData.setup_id);
-        }
-      }
+      // 3 & 4. Atomic UPDATE daily_sessions & playbook_setups via RPC
+      const isWin = pnl > 0;
+      const { error: rpcError } = await supabase.rpc('increment_journal_stats', {
+        p_session_id: dailySession.id,
+        p_pnl_inr: pnl,
+        p_setup_id: formData.setup_id || null,
+        p_is_win: isWin
+      });
+      if (rpcError) throw new Error(`Atomic update failed: ${rpcError.message}`);
 
       // 5. INSERT behavioral_events 'trade_logged'
       const { error: eventError1 } = await supabase.from('behavioral_events').insert({

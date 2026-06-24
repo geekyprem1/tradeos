@@ -20,10 +20,10 @@ export async function PATCH(
     const body = await request.json();
     const parsed = OverrideReasonSchema.parse(body);
 
-    // Verify intent belongs to user
+    // Verify intent belongs to user and check time
     const { data: intent, error: intentFetchError } = await supabase
       .from('trade_intents')
-      .select('user_id, validation_result, session_id')
+      .select('user_id, validation_result, session_id, submitted_at')
       .eq('id', intentId)
       .single();
 
@@ -33,6 +33,18 @@ export async function PATCH(
 
     if (intent.user_id !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Server-side enforcement of 60s brake
+    const submittedTime = new Date(intent.submitted_at).getTime();
+    const now = new Date().getTime();
+    const diffSeconds = (now - submittedTime) / 1000;
+
+    if (diffSeconds < 60) {
+      return NextResponse.json(
+        { error: `Psychological brake active. Please wait ${Math.ceil(60 - diffSeconds)} more seconds before overriding.` },
+        { status: 429 }
+      );
     }
 
     // Update intent

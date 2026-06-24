@@ -1,30 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/cron/notify?type=morning_checkin",
-      "schedule": "25 3 * * 1-5"
-    },
-    {
-      "path": "/api/cron/notify?type=market_open_warning",
-      "schedule": "55 3 * * 1-5"
-    },
-    {
-      "path": "/api/cron/notify?type=journal_reminder",
-      "schedule": "25 10 * * 1-5"
-    },
-    {
-      "path": "/api/cron/notify?type=journal_warning",
-      "schedule": "25 11 * * 1-5"
-    },
-    {
-      "path": "/api/cron/score",
-      "schedule": "30 11 * * 1-5"
-    },
-    {
-      "path": "/api/cron/notify?type=evening_planning",
-      "schedule": "30 14 * * 1-5"
-    },
-    {
       "path": "/api/cron/lock-journals",
       "schedule": "0 4 * * *"
     }
